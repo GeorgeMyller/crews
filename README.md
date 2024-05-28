@@ -17,7 +17,7 @@ CrewAI é uma estrutura para construir agentes colaborativos. Esses agentes são
    !pip install -U duckduckgo-search langchain_google_genai crewai crewai_tools
    ```
 2. **Obter a Chave da API do Google:**
-   Você precisará de uma chave da API do Google para usar o LLM Gemini. Você pode obter uma no [Console do Google Cloud](https://console.cloud.google.com/).  
+   Você precisará de uma chave da API do Google para usar o LLM Gemini.  
    * **No Google Colab, use o código a seguir para armazenar sua chave da API:**
      ```python
      from google.colab import userdata
@@ -47,7 +47,7 @@ CrewAI é uma estrutura para construir agentes colaborativos. Esses agentes são
 
 ### **Exploração Adicional**
 
-Este notebook é apenas um ponto de partida para usar o CrewAI com o Gemini. Explore a documentação do CrewAI ([[](https://docs.crewai.com/)](https://docs.crewai.com/)) para saber mais sobre:
+Este notebook é apenas um ponto de partida para usar o CrewAI com o Gemini. Explore a documentação do CrewAI ([(https://docs.crewai.com/)](https://docs.crewai.com/)) para saber mais sobre:
 
 * **Tipos de Agentes** 
 * **Ferramentas**  
