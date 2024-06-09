@@ -1,0 +1,401 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "toc_visible": true,
+      "authorship_tag": "ABX9TyMArmymUO+2Y2yQOqIbRMNL",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/GeorgeMyller/crews/blob/Modelo-Base-para-criar-Crews/Modelo_Base_Crew.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "\n",
+        "# **Modelo Base das crews com Gemini**\n"
+      ],
+      "metadata": {
+        "id": "oyOHxWHzy9pO"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Utilize a CrewAi com a llm padrão Google Gemini - 1.5 - Pro\n"
+      ],
+      "metadata": {
+        "id": "k4uVtrFVEwjm"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#Inserção da Api do Gemini\n"
+      ],
+      "metadata": {
+        "id": "LnR46upZy4k7"
+      }
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "cellView": "form",
+        "id": "Jba5zGgDyMsN"
+      },
+      "outputs": [],
+      "source": [
+        "#@title Configure Gemini API key\n",
+        "\n",
+        "import google.generativeai as genai\n",
+        "from google.colab import userdata\n",
+        "\n",
+        "gemini_api_secret_name = 'GOOGLE_API_KEY'  # @param {type: \"string\"}\n",
+        "\n",
+        "try:\n",
+        "  GOOGLE_API_KEY=userdata.get(gemini_api_secret_name)\n",
+        "  genai.configure(api_key=GOOGLE_API_KEY)\n",
+        "\n",
+        "except userdata.SecretNotFoundError as e:\n",
+        "   print(f'Secret not found\\n\\nThis expects you to create a secret named {gemini_api_secret_name} in Colab\\n\\nVisit https://makersuite.google.com/app/apikey to create an API key\\n\\nStore that in the secrets section on the left side of the notebook (key icon)\\n\\nName the secret {gemini_api_secret_name}')\n",
+        "   raise e\n",
+        "except userdata.NotebookAccessError as e:\n",
+        "  print(f'You need to grant this notebook access to the {gemini_api_secret_name} secret in order for the notebook to access Gemini on your behalf.')\n",
+        "  raise e\n",
+        "except Exception as e:\n",
+        "  # unknown error\n",
+        "  print(f\"There was an unknown error. Ensure you have a secret {gemini_api_secret_name} stored in Colab and it's a valid key from https://makersuite.google.com/app/apikey\")\n",
+        "  raise e"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "**negrito**# Conexção com o Gemini pro para respostas da caixa de texto"
+      ],
+      "metadata": {
+        "id": "GxG8Dcu2ywVU"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#connect to the API and send an example message\n",
+        "\n",
+        "text = 'Pergunte ao Gemini 1.5 Pro' #@param {type: 'string'}\n",
+        "\n",
+        "model = genai.GenerativeModel('gemini-1.5-pro')\n",
+        "\n",
+        "chat = model.start_chat(history=[])\n",
+        "\n",
+        "response = chat.send_message(text)\n",
+        "response.text"
+      ],
+      "metadata": {
+        "id": "kEBcbUK6yuo2",
+        "cellView": "form"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Instalação dos  itens necessários\n",
+        "CrewAi\n",
+        "\n",
+        "CrewAi Tools\n",
+        "\n",
+        "DuckDuckgo search\n",
+        "\n",
+        "Langchain Google GenAi\n",
+        "\n",
+        "Youtube Search"
+      ],
+      "metadata": {
+        "id": "9gdA3lny0URJ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# @title Instalando as ferramentas clique em mostrar codigo para ver o conteúdo. { display-mode: \"form\" }\n",
+        "\n",
+        "!pip install -q -U duckduckgo-search langchain_google_genai crewai crewai_tools youtube_search"
+      ],
+      "metadata": {
+        "collapsed": true,
+        "id": "oNwjqQO-1Ie-"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Impotando as ferramentas necessárias para o funcionamento"
+      ],
+      "metadata": {
+        "id": "IkQsPGGN1N8s"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# @title Importando as ferramentas clique em mostrar codigo para ver o conteúdo. { display-mode: \"form\" }\n",
+        "\n",
+        "from crewai import Agent, Task, Crew, Process #CrewAi\n",
+        "from crewai_tools import ScrapeWebsiteTool, DirectoryReadTool #Web Scraping #Ler Diretorio\n",
+        "from langchain.tools import tool , DuckDuckGoSearchRun #Ferramentas da Langchain #Pesquisa no DuckDuckgo\n",
+        "from langchain_google_genai import ChatGoogleGenerativeAI #Google Gemini\n",
+        "from langchain_community.tools import YouTubeSearchTool #Youtube Search\n",
+        "from IPython.display import Markdown, display #Exibir Markdown ao final\n",
+        "import requests\n",
+        "import os\n"
+      ],
+      "metadata": {
+        "id": "AY4q57kQ1Uwe"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Definir as Ferramemtas (tools)\n",
+        "search_tool = DuckDuckGoSearchRun()\n",
+        "\n",
+        "youtube_tool = YouTubeSearchTool()\n",
+        "\n",
+        "scraper_tool = ScrapeWebsiteTool(\" \") Adicionar o URL do site a ser lido como referencia\n",
+        "\n",
+        "serper_tool = SerperDevTool()\n",
+        "\n",
+        "directory_tool = DirectoryReadTool(directory='/path/to/your/directory')\n"
+      ],
+      "metadata": {
+        "id": "bUpiSnaK2FTE"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "search_tool = DuckDuckGoSearchRun()\n",
+        "youtube_tool = YouTubeSearchTool()\n",
+        "scraper_tool = ScrapeWebsiteTool(\"URL da pesquisa\") # @param {type:\"raw\"}\n",
+        "directory_tool = DirectoryReadTool()\n"
+      ],
+      "metadata": {
+        "id": "uEy4Q1gD2QnG",
+        "cellView": "form"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## Iniciando a as ferramentas e dando direcionamento para o Youtube search"
+      ],
+      "metadata": {
+        "id": "OeLxBWv92PqR"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# @title Inicia Scraper tool clique em mostrar codigo para ver o conteúdo. { display-mode: \"form\" }\n",
+        "scraper_tool.run()"
+      ],
+      "metadata": {
+        "id": "rJTpFM3AAndP"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# @title Orientea busca no Youtube. { display-mode: \"form\" }\n",
+        "pergunta_para_o_youtube = \"\" # @param {type:\"string\"}\n",
+        "youtube_tool.run(pergunta_para_o_youtube)\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 35
+        },
+        "id": "vdh0DDns4JU_",
+        "outputId": "5d4dd4a9-7620-43d5-cb23-2d593474a346"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "'[]'"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "string"
+            }
+          },
+          "metadata": {},
+          "execution_count": 23
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Ciração dos agentes e tarefas de cada um deles"
+      ],
+      "metadata": {
+        "id": "1XBWZiVT6hkx"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Estrutura basica dos agentes e tarefas\n",
+        "\n",
+        "Para inserir mais agentes e tarefas copie e cole o modelo de agente e tarefa sugerido"
+      ],
+      "metadata": {
+        "id": "qresdrjt6ouT"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# @title Configuração dos agentes clique em mostrar codigo para ver o conteúdo. { display-mode: \"form\" }\n",
+        "\n",
+        "\n",
+        "nome_do_agente = Agent(\n",
+        "    role='Posição' #@param {type: 'string'}\n",
+        "    ,\n",
+        "    goal=\"Objetivo\" #@param {type: 'string'}\n",
+        "    ,\n",
+        "    backstory=\"Contexto \" #@param {type: 'string'}\n",
+        "    ,\n",
+        "    verbose=True,\n",
+        "    allow_delegation=False,\n",
+        "    memory=True,\n",
+        "        tools=[tools_do_agente] #@param {type: 'raw'}\n",
+        "    ,\n",
+        "    llm = ChatGoogleGenerativeAI(\n",
+        "    model=\"gemini-1.5-pro\",\n",
+        "    verbose=True,\n",
+        "    temperature=0.3 # @param {type:\"slider\", min:0, max:1, step:0.05}\n",
+        "    ,\n",
+        "    google_api_key=GOOGLE_API_KEY\n",
+        ")\n",
+        ")\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "mjxl05Xn63dU"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# @title Configuração da tarefa do agente clique em mostrar codigo para ver o conteúdo. { display-mode: \"form\" }\n",
+        "\n",
+        "task_search = Task(\n",
+        "    description=\"Descrição datarefa\" #@param {type: 'string'}\n",
+        "    ,\n",
+        "    agent=nome_do_agente #@param {type: 'raw'}\n",
+        "    ,\n",
+        "    expected_output=\"saída esperada para a tarefa\" #@param {type: 'string'}\n",
+        "    ,\n",
+        "    async_execution=False\n",
+        ")"
+      ],
+      "metadata": {
+        "id": "m2tsndMY7vBB"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Criando a crew e executando"
+      ],
+      "metadata": {
+        "id": "3tRrbdAjAtCD"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# @title Configure a Crew clique em mostrar codigo para ver o conteúdo. { display-mode: \"form\" }\n",
+        "\n",
+        "crew = Crew(\n",
+        "    agents=[nome_dos_agentes_na_ordem_de _execussao] #@param {type: 'raw'}\n",
+        "    ,\n",
+        "    tasks=[tarefas_a_serem_executadas]#@param {type: 'raw'}\n",
+        "    ,\n",
+        "    verbose=2,\n",
+        "process = Process.sequential # @param [\"Process.hierarchical\", \"Process.sequential\"] {type:\"raw\", allow-input: true}\n",
+        ")"
+      ],
+      "metadata": {
+        "id": "VnofKrEH8GPI"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#@title Executando a crew clique em mostrar codigo para ver o conteúdo. { display-mode: \"form\" }\n",
+        "result = crew.kickoff()\n",
+        "\n",
+        "print(\"######################\")\n",
+        "print(result)"
+      ],
+      "metadata": {
+        "id": "4EdiDPF88V_3"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Caso queira a saida em markdow  é necessário inserir no agente que irá dar a resposta final\n",
+        "\n",
+        "   na task:  output_file=\"nome_do_arquivo.md\",\n",
+        "\n",
+        "   Ao final da crew iserir o comando\n",
+        "   display(Markdown(\"./nome_do_arquivo.md\"))\n"
+      ],
+      "metadata": {
+        "id": "axEkJNTTAzJu"
+      }
+    }
+  ]
+}
