@@ -1,5 +1,5 @@
 ## Este repositório está dedicado a compartilhar minhas crews com o google gemini como LLM
-Aqui você encontrá exempços de uso da CrewAi no Google colab usando api do gemini como LLM 
+Aqui você encontrá exempços de uso da CrewAi no Google colab usando api do gemini como LLM.
 
 ## CrewAI no Google Colab: Usando o Gemini 
 Este notebook do Google Colab demonstra como usar o CrewAI em conjunto com a API do Gemini para tarefas de criação de conteúdo.
